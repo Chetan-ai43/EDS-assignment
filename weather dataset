@@ -1,0 +1,112 @@
+weather-analysis/
+├── README.md
+├── weather_analysis.py
+└── weather.csv  # Add your dataset here
+# Weather Data Analysis
+
+This project performs 20 data analysis tasks on a weather dataset using Pandas and NumPy.
+
+## Requirements
+
+- Python 3.x
+- pandas
+- numpy
+- scipy
+- matplotlib
+
+## Installation
+
+```bash
+pip install pandas numpy scipy matplotlib
+python weather_analysis.py
+
+---
+
+### 📄 `weather_analysis.py`
+
+```python
+import pandas as pd
+import numpy as np
+from scipy.stats import zscore
+import matplotlib.pyplot as plt
+
+# Load data
+df = pd.read_csv('weather.csv')
+
+# 1. Average maximum temperature
+print("1. Average MaxTemp:", df['MaxTemp'].mean())
+
+# 2. Std dev of rainfall in Sydney
+print("2. Std Dev Rainfall in Sydney:", df[df['Location'] == 'Sydney']['Rainfall'].std())
+
+# 3. Day with highest wind gust
+print("3. Day with highest WindGustSpeed:\n", df.loc[df['WindGustSpeed'].idxmax()])
+
+# 4. Rainy days in Melbourne
+print("4. Rainy days in Melbourne:", df[(df['Location'] == 'Melbourne') & (df['RainToday'] == 'Yes')].shape[0])
+
+# 5. Correlation between MinTemp and MaxTemp
+print("5. Correlation MinTemp vs MaxTemp:", df['MinTemp'].corr(df['MaxTemp']))
+
+# 6. Missing values
+print("6. Missing values:\n", df.isnull().sum())
+
+# 7. Median humidity at 3pm
+print("7. Median Humidity3pm:", df['Humidity3pm'].median())
+
+# 8. Location with most average sunshine
+print("8. Location with most avg sunshine:", df.groupby('Location')['Sunshine'].mean().idxmax())
+
+# 9. Average temperature at 9am and 3pm
+print("9. Avg Temp at 9am and 3pm:\n", df[['Temp9am', 'Temp3pm']].mean())
+
+# 10. Day with largest temp difference
+df['TempDiff'] = df['MaxTemp'] - df['MinTemp']
+print("10. Largest TempDiff Day:\n", df.loc[df['TempDiff'].idxmax()])
+
+# 11. Wind speed comparison on rainy vs non-rainy days
+print("11. WindSpeed comparison:\n", df.groupby('RainToday')[['WindSpeed9am', 'WindSpeed3pm']].mean())
+
+# 12. Days above 40°C
+print("12. Days above 40°C:\n", df[df['MaxTemp'] > 40])
+
+# 13. 7-day rolling average of MaxTemp
+df['MaxTempRolling7'] = df['MaxTemp'].rolling(window=7).mean()
+print("13. 7-day rolling MaxTemp (first 10 rows):\n", df['MaxTempRolling7'].head(10))
+
+# 14. Histogram of rainfall
+print("14. Showing histogram of Rainfall...")
+df['Rainfall'].hist(bins=20)
+plt.title("Rainfall Distribution")
+plt.xlabel("Rainfall")
+plt.ylabel("Frequency")
+plt.savefig("rainfall_histogram.png")
+plt.close()
+
+# 15. Month with highest avg rainfall
+df['Month'] = pd.to_datetime(df['Date']).dt.month
+print("15. Month with highest avg rainfall:", df.groupby('Month')['Rainfall'].mean().idxmax())
+
+# 16. Avg pressure difference 9am vs 3pm
+print("16. Avg Pressure Diff (3pm - 9am):", (df['Pressure3pm'] - df['Pressure9am']).mean())
+
+# 17. Location with most frequent 'Yes' for RainTomorrow
+print("17. Location with most 'Yes' for RainTomorrow:", df[df['RainTomorrow'] == 'Yes']['Location'].value_counts().idxmax())
+
+# 18. Outliers in MaxTemp using Z-score
+outliers = df[np.abs(zscore(df['MaxTemp'].dropna())) > 3]
+print("18. MaxTemp outliers:\n", outliers)
+
+# 19. Pivot table of avg MaxTemp by Location and Month
+pivot_table = df.pivot_table(values='MaxTemp', index='Location', columns='Month', aggfunc='mean')
+print("19. Pivot table of MaxTemp:\n", pivot_table)
+
+# 20. Classify days based on MaxTemp
+conditions = [
+    df['MaxTemp'] > 35,
+    df['MaxTemp'].between(25, 35),
+    df['MaxTemp'] < 25
+]
+choices = ['Hot', 'Warm', 'Cool']
+df['TempCategory'] = np.select(conditions, choices)
+print("20. Temperature Category sample:\n", df[['Date', 'MaxTemp', 'TempCategory']].head())
